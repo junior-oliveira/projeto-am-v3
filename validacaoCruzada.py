@@ -14,12 +14,16 @@ def modelos (a, b):
     from sklearn.linear_model import LogisticRegression
     from sklearn.tree import DecisionTreeClassifier
     from sklearn.ensemble import VotingClassifier
-    
+    from sklearn.model_selection import RepeatedStratifiedKFold
 
     x = a
     y = b
 
-    kfold = KFold(n_splits=10)
+    #kfold = KFold(n_splits=5)
+    #kfold = KFold(n_splits=5, random_state=1, shuffle=True)
+
+    # Repeated k-fold
+    kfold = RepeatedStratifiedKFold(n_splits=5, n_repeats=10, random_state=1)
 
     bayes_clf = ClassificadorBayesiano()
     knn_clf = KNeighborsClassifier(n_neighbors=5)
@@ -33,7 +37,7 @@ def modelos (a, b):
     reg_log_clf_cv = cross_val_score(reg_log_clf, x, y, cv = kfold).mean()
     arv_dec_clf_cv = cross_val_score(arv_dec_clf, x, y, cv = kfold).mean()
     ensemble_cv = cross_val_score(ensemble, x, y, cv = kfold).mean()
-
+    
     dic_modelos = {'Bayes':bayes_clf_cv, 'KNN':knn_clf_cv, 'Regressao':reg_log_clf_cv, 'Arvore':arv_dec_clf_cv, 'Ensemble':ensemble_cv}
     melhor_modelo = max(dic_modelos, key=dic_modelos.get)
 

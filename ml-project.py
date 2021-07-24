@@ -6,7 +6,7 @@ from sklearn.neighbors import KNeighborsClassifier
 from sklearn.linear_model import LogisticRegression
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.ensemble import VotingClassifier
-
+from graficos.correlacao import correlacao, plot_corr
 # t = time.time()
 # ...
 # elapsed = time.time() - t

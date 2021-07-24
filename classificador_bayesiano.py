@@ -50,7 +50,7 @@ class ClassificadorBayesiano(BaseEstimator, ClassifierMixin):
         # Input validation
         X = check_array(X)
         n_atributos_ = X.shape[0]
-        y = np.empty(n_atributos_, dtype=object)
+        y = []
         d = self.n_atributos_
         for i, xk in enumerate(X):
             max_pwi_xk = 0.0
@@ -62,24 +62,31 @@ class ClassificadorBayesiano(BaseEstimator, ClassifierMixin):
                 sigma_inv_i = self.sigma_inv_[k]
                 
                 pwi_xk = self.pwi_xk(xk, pwi, mu_i, sigma_inv_i, d)
+                #print(pwi_xk)
                 if(pwi_xk > max_pwi_xk):
                     max_pwi_xk = pwi_xk
+                    
                     classe_predita = self.classes_[k]
-            y[i] =  classe_predita
-        c, i = np.unique(y, return_inverse=True)
+            y.append(classe_predita)
+            #print('Tipo: ', type(y[i]), 'Valor: ', y[i])
+        #c, i = np.unique(y, return_inverse=True)
         #closest = np.argmin(euclidean_distances(X, self.X_), axis=1)  
-
+        
         #substituir por return y em caso de problemas. 
-        return self.classes_[i]
+        #return self.classes_[i]
+        return y
     
     def get_probabilidades_a_priori(self, y):
         """ 
             Estima as probabilidades a posteriori a partir do vetor y 
         """
+        
         classes = self.classes_
         probabilidades_a_priori = []
         for i in range(len(classes)):    
-            probabilidades_a_priori.append (len(y[y == classes[i]])/len(y))    
+            probabilidades_a_priori.append (len(y[y == classes[i]])/len(y))
+        probabilidades_a_priori = np.array(probabilidades_a_priori)
+        
         return probabilidades_a_priori
 
     def estimacao_parametros(self, X, y):
@@ -89,21 +96,26 @@ class ClassificadorBayesiano(BaseEstimator, ClassifierMixin):
         check_is_fitted(self)
         # Armazena os vetores de médias e a matrizes de variância e covariância
         
-
+        
         #Estimação do vetor de médias
         
-        for k in range(len(self.classes_)):  
+        for k in range(len(self.classes_)):                         
             for i in range(len(y)):
                 if(self.classes_[k] == y[i]):                 
                     self.mu_[k] = np.add(self.mu_[k], X[i])
-        for k in range(len(self.classes_)):
-            self.mu_[k] = self.mu_[k] / self.n_de_exemplos_classes_[k]           
-
+            self.mu_[k] = (self.mu_[k] / self.n_de_exemplos_classes_[k])
+            
         #Estimação do vetor de variâncias
-        for xk in X:
-            for k in range(len(self.classes_)):
-                self.variancias_[k] += np.linalg.norm(np.subtract(xk,self.mu_[k]))**2    
-        self.variancias_ = self.variancias_/(self.numero_de_exemplos_*self.n_atributos_)
+        for k in range(len(self.classes_)):
+            for i in range(len(y)):
+                if(self.classes_[k] == y[i]):   
+                    self.variancias_[k] += np.linalg.norm(np.subtract(X[i],self.mu_[k]))**2    
+            self.variancias_[k] = self.variancias_[k]/(self.n_de_exemplos_classes_[k]*self.n_atributos_)
+        
+        #for xk in X:
+        #    for k in range(len(self.classes_)):
+        #        self.variancias_[k] += np.linalg.norm(np.subtract(xk,self.mu_[k]))**2    
+        #self.variancias_ = self.variancias_/(self.numero_de_exemplos_*self.n_atributos_)
         
         # Estimação das matrizes sigma e sigma_inv
         for k in range(len(self.classes_)):
