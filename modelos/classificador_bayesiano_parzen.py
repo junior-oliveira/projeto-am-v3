@@ -140,7 +140,7 @@ class ClassificadorBayesianoParzen(BaseEstimator, ClassifierMixin):
     def pxk_wi(self, xk, wi, y):
         exemplos_wi = self.X_[y == wi]
         #t = time.time()
-        res = self.parzen_estimation(exemplos_wi, xk, self.h, self.dim, self.parzen_window_func, self.gaussian_kernel)
+        res = self.parzen_estimation(exemplos_wi, xk, self.h, self.dim, self.parzen_window_produto_multivariada, self.hypercube_kernel)
         #elapsed = time.time() - 1
         #print('tempo gasto: ', elapsed) 
         return res
@@ -153,7 +153,7 @@ class ClassificadorBayesianoParzen(BaseEstimator, ClassifierMixin):
 
         return posteriores
     
-    def hypercube_kernel(self, h, x, x_i):
+    def hypercube_kernel(self, h, x, x_i, d):
 
         """
         Implementation of a hypercube kernel for Parzen-window estimation.
@@ -184,8 +184,9 @@ class ClassificadorBayesianoParzen(BaseEstimator, ClassifierMixin):
         """
         assert (x.shape == x_i.shape), 'vectors x and x_i must have the same dimensions'
 
-        res = (1/(math.sqrt(2*math.pi)**d)*(h**d)) * np.exp(-0.5 * (((x - x_i) / h)**2))
-        
+        #res = (1/(math.sqrt(2*math.pi)**d)*(h**d)) * np.exp(-0.5 * (((x - x_i) / h)**2))
+        res = (1/(np.sqrt(2*np.pi)**d)*(h**d)) * np.exp(-0.5 * (((x - x_i) / h)**2))
+        res = (1/(np.sqrt(2*np.pi))) * np.exp(-(((x - x_i) / h)**2) /2)
         return res
         
 
@@ -201,6 +202,17 @@ class ClassificadorBayesianoParzen(BaseEstimator, ClassifierMixin):
                 return 0
         return 1
 
+    def parzen_window_produto_multivariada(self, x_vec, h=1):
+        """
+        Implementation of the window function. Returns 1 if 'd x 1'-sample vector
+        lies within inside the window, 0 otherwise.
+
+        """
+        for row in x_vec:
+            if np.prod(row) > (1/2):
+                return 0
+        return 1
+        
 
     def parzen_estimation(self, x_samples, point_x, h, d, window_func, kernel_func):
         """
